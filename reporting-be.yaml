@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reporting-be
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reporting-be
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: reporting-be
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+        - name: reporting-be
+          image: cemaregistry.azurecr.io/cema/reporting-be:$VERSION
+          ports:
+            - containerPort: 30027
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              cpu: 200m
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: $ENV
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reporting-be
+spec:
+  type: NodePort
+  ports:
+    - port: 30027
+      nodePort: 30027
+  selector:
+    app: reporting-be
